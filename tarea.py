@@ -7,9 +7,9 @@ import numpy as np
 Latitud_e = -33.42628  # latitud estación terrena
 longitud_e = -70.56656 # longitud estación terrena
 r_e = 6371 # altura estacion terrestre
-Latitud_s = -0.03 # latitud satélite
-longitud_s = 30.93 # longitud satélite
-r_s = 35781.41 + r_e # altura del satelite
+Latitud_s = -0.04 # latitud satélite
+longitud_s = 45.02 # longitud satélite
+r_s = 35785.57 + r_e # altura del satelite
 
 if __name__ == "__main__":
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Obtener angulo de elevacion
 
     cosEl = np.sin(gamma)/ np.sqrt((1 + np.power(r_e/r_s, 2) - 2*(r_e/r_s)*np.cos(gamma)))
-    El = np.arccos(cosEl)
+    El = np.arccos(cosEl) if np.rad2deg(gamma) < 90 else -np.arccos(cosEl)
 
     print(f"ángulo de elevación: {np.rad2deg(El)}°")
 
@@ -40,3 +40,9 @@ if __name__ == "__main__":
 
     # falta determinar el azimut
     
+    #
+    asd = r_e/cosGamma
+    if El >= 0 and r_s >= asd:
+        print(f"Es visible: rs = {r_s} | {asd}")
+    else:
+        print(f"No es visible: rs = {r_s} | {asd}")
