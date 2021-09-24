@@ -1,48 +1,96 @@
-# Desarrolle un programa (Python, C/C++, Matlab) que al ingresar la ubicación de
-# una estación terrena (latitud y longitud), 
-# la ubicación de un satélite GEO (latitud y longitud) y la altura del satélite, 
-# determine el ángulo de elevación, el Azimut y validar si hay o no visibilidad.
+
+# Autores: José Matamala, Víctor Sánchez
+# Curso: Cominicaciones Satelitales
+# Año: 2021
 
 import numpy as np
-Latitud_e = -33.42628  # latitud estación terrena
-longitud_e = -70.56656 # longitud estación terrena
-r_e = 6371 # altura estacion terrestre
-Latitud_s = -0.04 # latitud satélite
-longitud_s = 45.02 # longitud satélite
-r_s = 35785.57 + r_e # altura del satelite
 
-if __name__ == "__main__":
+option = 0
+while(option != 2):
+    print(  '\n'+"            Ingresar Opcion" +'\n')
+    print("1.Determinar Datos (Angulo de elevacion - azimut - Visibilidad)")
+    print("2.Terminar Programa")
 
-    Latitud_e = np.deg2rad(Latitud_e)
-    longitud_e = np.deg2rad(longitud_e)
-    Latitud_s = np.deg2rad(Latitud_s)
-    longitud_s = np.deg2rad(longitud_s)
+    option=float(input('Opcion: '))
+
+    if (option == 1):
+        print('\n'+"            Ingresar Datos" +'\n')
+        Latitud_e=float(input('LATITUD de la estacion terrena: '))
+        longitud_e=float(input('LONGITUD de la estacion: '))
+        Latitud_s=float(input('LATITUD del satelite: '))
+        longitud_s=float(input('LONGITUD del  satelite: '))
+        r_s= float(input('Altura del satelite(KM): '))
+
+        r_s = r_s + 6371
+        r_e = 6371
+
+        if(Latitud_e <= 90 and Latitud_e >= -90 and Latitud_s < 1 and Latitud_s > -1 and longitud_e <= 180 and longitud_e >= -180 and longitud_s <= 180 and longitud_s >= -180 and r_s > 35700):
+            
+            print('\n'+"            RESULTADOS" +'\n')
+
+            Latitud_e = np.deg2rad(Latitud_e)
+            longitud_e = np.deg2rad(longitud_e)
+            Latitud_s = np.deg2rad(Latitud_s)
+            longitud_s = np.deg2rad(longitud_s)
+
+            # Obtener Gamma
+            cosGamma = np.cos(Latitud_e)*np.cos(Latitud_s)*np.cos(longitud_s - longitud_e) + np.sin(Latitud_e)*np.sin(Latitud_s)
+            gamma = np.arccos(cosGamma)
+
+            # Obtener angulo de elevacion
+            cosEl = np.sin(gamma)/ np.sqrt((1 + np.power(r_e/r_s, 2) - 2*(r_e/r_s)*np.cos(gamma)))
+            El = np.arccos(cosEl) if np.rad2deg(gamma) < 90 else -np.arccos(cosEl)
+            print(f"---> Ángulo de elevación: {np.rad2deg(El)}°")
+
+            d = r_s* np.sqrt((1 + np.power(r_e/r_s, 2) - 2*(r_e/r_s)*np.cos(gamma)))
+            a_intemedio = np.arctan((np.tan(np.abs(longitud_s - longitud_e)/np.sin(np.abs(Latitud_e)))))
+
+            # Azimut
+
+            Beta = longitud_s - longitud_e
+
+            alpha = np.arctan((np.tan(np.abs(Beta)))/(np.sin(Latitud_e)))
+            alphaD = np.rad2deg(alpha)
+
+            if (alphaD > 0 ):
+                alphaD = alphaD + 180
+            if alphaD < 0 : #Pasarlos a positivo
+                 alphaD = alphaD + 360
+
+            if (Latitud_e < 0 and  Beta > 0 ):#subsatelite al noroeste
+                Az = 360 - alphaD
+                print ("---> Azimut: ",Az)
+            elif (Latitud_e < 0 and Beta < 0 ): #subsatelite al noreste
+                Az = alphaD
+                print ("---> Azimut: ",Az)
+            elif (Latitud_e > 0 and Beta < 0 ):#subsatelite al suroeste
+                Az = 180 + alphaD
+                print ("---> Azimut: ",Az)
+            elif (Latitud_e > 0 and Beta > 0 ):#subsatelite al sureste
+                Az = 180 - alphaD
+                print ("---> Azimut: ",Az)
 
 
-    # Obtener Gamma
-    cosGamma = np.cos(Latitud_e)*np.cos(Latitud_s)*np.cos(longitud_s - longitud_e) + np.sin(Latitud_e)*np.sin(Latitud_s)
-    gamma = np.arccos(cosGamma)
-    print(f"COS(gamma): {cosGamma}")
-    print(f"gamma: {np.rad2deg(gamma)}°")
-    
-    # Obtener angulo de elevacion
+            #Visibilidad
+            asd = r_e/cosGamma
+            if El >= 0 and r_s >= asd:
+                print(f"---> El satelite SI es visible")
+            else:
+                print(f"---> El satelite NO es visible")
 
-    cosEl = np.sin(gamma)/ np.sqrt((1 + np.power(r_e/r_s, 2) - 2*(r_e/r_s)*np.cos(gamma)))
-    El = np.arccos(cosEl) if np.rad2deg(gamma) < 90 else -np.arccos(cosEl)
 
-    print(f"ángulo de elevación: {np.rad2deg(El)}°")
+        else:
+            print('\n'+"Datos ingresados erroneos, favor intentelo denuevo...")
+            print('\n'+"            ERRORES: " +'\n')
+            if(Latitud_e > 90 or Latitud_e < -90 ):
+                print("-> Latitud de la estacion terreste fuera de rango")
+            if(Latitud_s > 1 or Latitud_s < -1 ):
+                print("-> Latitud de del satelite Geostacionario debe ser cercana al ecuador")
+            if(longitud_e > 180 or longitud_e < -180 ):
+                print("-> Longitud de la estacion terreste fuera de rango")
+            if(longitud_s > 180 or longitud_s < -180 ):
+                print("-> Longitud del Satelite fuera de rango")
+            if(r_s < 35700 ):
+                print("-> La altura es menor que la de un satelite Geostacional")
+            
 
-    d = r_s* np.sqrt((1 + np.power(r_e/r_s, 2) - 2*(r_e/r_s)*np.cos(gamma)))
-    print(f"distancia: {d}")
-
-    a_intemedio = np.arctan((np.tan(np.abs(longitud_s - longitud_e)/np.sin(np.abs(Latitud_e)))))
-    print(f"angulo intermedio: {np.rad2deg(a_intemedio)}")
-
-    # falta determinar el azimut
-    
-    #
-    asd = r_e/cosGamma
-    if El >= 0 and r_s >= asd:
-        print(f"Es visible: rs = {r_s} | {asd}")
-    else:
-        print(f"No es visible: rs = {r_s} | {asd}")
